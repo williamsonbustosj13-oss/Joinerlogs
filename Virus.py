@@ -2,11 +2,9 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from datetime import datetime, timedelta
+import os
 
-# =======================
-# CONFIG
-# =======================
-TOKEN = "MTQ0ODkzODQ3MTM4NDE1NDE5Mw.GvS8TF.l5hpJnxA27gJIIar-IgLGekA6EXWcPnN8RKeII"
+bot.run(os.getenv("DISCORD_TOKEN"))
 OWNER_ID = 1373716141297504428  # PON TU ID
 
 FOOTER_ICON = "https://cdn.discordapp.com/attachments/1398867717871767582/1451039506017812542/4c6637bb61fb4d70.jpg?ex=6944b959&is=694367d9&hm=50471d27d5cc21b439d5ddac727ec2285f194b01957ef729fee3e1bafbef8fae"
