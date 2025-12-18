@@ -1,1 +1,1 @@
-worker: python virus.py
+worker: python Virus.py
