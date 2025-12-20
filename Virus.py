@@ -1,5 +1,4 @@
 import discord
-from discord import app_commands
 from discord.ext import commands
 from datetime import datetime
 import os
@@ -10,7 +9,7 @@ import traceback
 # =======================
 OWNER_ID = 1373716141297504428
 
-FOOTER_ICON = "https://cdn.discordapp.com/avatars/1373716141297504428/e682f46e142edbc99ff265eca11df3ed.webp?size=4096"
+FOOTER_ICON = "https://cdn.discordapp.com/attachments/1398867717871767582/1451976357784453150/Death_Note_icon__3.jpg"
 COLOR_PRINCIPAL = 0x96720a
 COLOR_ERROR = 0x930909
 COLOR_SUCCESS = 0x00ff00
@@ -24,15 +23,13 @@ ROLE_BUYER_ID = 1402166260757696603
 whitelist = {}  # user_id : {key, redeemed_at, blacklisted}
 
 # =======================
-# FOOTERS
+# FOOTER GENERATOR
 # =======================
-def generar_footer_panel():
-    hora = datetime.now().strftime("%H:%M")
-    return f"Sent by lexcarlxs#0 | Hoy a {hora}"
+def generar_footer_panel(fecha: datetime):
+    return f"Sent by lexcarlxs#0 | {fecha.strftime('%d/%m/%Y %H:%M')}"
 
 def generar_footer_hora():
-    hora = datetime.now().strftime("%H:%M")
-    return f"Hoy a {hora}"
+    return datetime.now().strftime("%d/%m/%Y %H:%M")
 
 # =======================
 # BOT
@@ -61,33 +58,32 @@ async def on_error(event, *args, **kwargs):
 # MODAL REDEEM
 # =======================
 class RedeemModal(discord.ui.Modal, title="Enter script key below"):
-    key = discord.ui.TextInput(
-        label="Script Key",
-        placeholder="Vwk8u17bbqlqlp0j1qbw4"
-    )
+    key = discord.ui.TextInput(label="Script Key")
 
     async def on_submit(self, interaction: discord.Interaction):
         uid = interaction.user.id
         footer = generar_footer_hora()
 
         if uid in whitelist and whitelist[uid]["blacklisted"]:
-            embed = discord.Embed(
-                title="Not whitelisted",
-                description="You are blacklisted.",
-                color=COLOR_ERROR
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="Not whitelisted",
+                    description="You are blacklisted.",
+                    color=COLOR_ERROR
+                ).set_footer(text=footer),
+                ephemeral=True
             )
-            embed.set_footer(text=footer)
-            await interaction.response.send_message(embed=embed, ephemeral=True)
             return
 
         if uid in whitelist:
-            embed = discord.Embed(
-                title="Already whitelisted",
-                description="You already redeemed a key.",
-                color=COLOR_ERROR
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="Already whitelisted",
+                    description="You already redeemed a key.",
+                    color=COLOR_ERROR
+                ).set_footer(text=footer),
+                ephemeral=True
             )
-            embed.set_footer(text=footer)
-            await interaction.response.send_message(embed=embed, ephemeral=True)
             return
 
         if self.key.value == WHITELIST_KEY:
@@ -96,22 +92,24 @@ class RedeemModal(discord.ui.Modal, title="Enter script key below"):
                 "redeemed_at": datetime.now(),
                 "blacklisted": False
             }
-            embed = discord.Embed(
-                title="Successfully Redeemed!",
-                description="You are now whitelisted.",
-                color=COLOR_SUCCESS
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="Successfully Redeemed!",
+                    description="You are now whitelisted.",
+                    color=COLOR_SUCCESS
+                ).set_footer(text=footer),
+                ephemeral=True
             )
-            embed.set_footer(text=footer)
-            await interaction.response.send_message(embed=embed, ephemeral=True)
             return
 
-        embed = discord.Embed(
-            title="Invalid key",
-            description="User key doesn't exist.",
-            color=COLOR_ERROR
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="Invalid key",
+                description="User key doesn't exist.",
+                color=COLOR_ERROR
+            ).set_footer(text=footer),
+            ephemeral=True
         )
-        embed.set_footer(text=footer)
-        await interaction.response.send_message(embed=embed, ephemeral=True)
 
 # =======================
 # BOTONES
@@ -125,13 +123,14 @@ class ControlButtons(discord.ui.View):
         await interaction.response.send_modal(RedeemModal())
 
     async def not_whitelisted(self, interaction):
-        embed = discord.Embed(
-            title="Not whitelisted",
-            description="Redeem a key to continue.",
-            color=COLOR_ERROR
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="Not whitelisted",
+                description="Redeem a key to continue.",
+                color=COLOR_ERROR
+            ).set_footer(text=generar_footer_hora()),
+            ephemeral=True
         )
-        embed.set_footer(text=generar_footer_hora())
-        await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @discord.ui.button(label="📜 Get Script", style=discord.ButtonStyle.blurple)
     async def get_script(self, interaction, button):
@@ -140,74 +139,40 @@ class ControlButtons(discord.ui.View):
             await self.not_whitelisted(interaction)
             return
 
-        embed = discord.Embed(
-            title="Your Script",
-            description=(
-                "```lua\n"
-                'script_key = "Nova81y2uv1iqbbanHub9ns"\n'
-                'loadstring(game:HttpGet("https://api.novahub.workers.dev/files/v3/loaders/novahub.lua"))()\n'
-                "```"
-            ),
-            color=COLOR_PRINCIPAL
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="Your Script",
+                description=(
+                    "```lua\n"
+                    'script_key = "Nova81y2uv1iqbbanHub9ns"\n'
+                    'loadstring(game:HttpGet("https://api.novahub.workers.dev/files/v3/loaders/novahub.lua"))()\n'
+                    "```"
+                ),
+                color=COLOR_PRINCIPAL
+            ).set_footer(text=generar_footer_hora()),
+            ephemeral=True
         )
-        embed.set_footer(text=generar_footer_hora())
-        await interaction.response.send_message(embed=embed, ephemeral=True)
-
-    @discord.ui.button(label="📊 Get Stats", style=discord.ButtonStyle.grey)
-    async def get_stats(self, interaction, button):
-        uid = interaction.user.id
-        if uid not in whitelist:
-            await self.not_whitelisted(interaction)
-            return
-
-        data = whitelist[uid]
-        embed = discord.Embed(title="Your Stats", color=COLOR_PRINCIPAL)
-        embed.add_field(name="Key", value=data["key"], inline=False)
-        embed.add_field(
-            name="Redeemed at",
-            value=data["redeemed_at"].strftime("%d/%m/%Y %H:%M"),
-            inline=False
-        )
-        embed.add_field(name="Status", value="🟢 Whitelisted", inline=False)
-        embed.set_footer(text=generar_footer_hora())
-        await interaction.response.send_message(embed=embed, ephemeral=True)
-
-    @discord.ui.button(label="👤 Get Role", style=discord.ButtonStyle.blurple)
-    async def get_role(self, interaction, button):
-        uid = interaction.user.id
-        if uid not in whitelist:
-            await self.not_whitelisted(interaction)
-            return
-
-        role = interaction.guild.get_role(ROLE_BUYER_ID)
-        if role:
-            await interaction.user.add_roles(role)
-            await interaction.response.send_message(
-                f"✅ Added {role.mention}",
-                ephemeral=True
-            )
 
 # =======================
 # MODAL PANEL
 # =======================
 class PanelModal(discord.ui.Modal, title="Create Control Panel"):
-    panel_title = discord.ui.TextInput(
-        label="Panel Title",
-        placeholder="Autojoiner",
-        max_length=50
-    )
+    panel_title = discord.ui.TextInput(label="Project Name")
 
     async def on_submit(self, interaction: discord.Interaction):
+        fecha_creacion = datetime.now()
+        project_name = self.panel_title.value
+
         embed = discord.Embed(
-            title=self.panel_title.value,
+            title=f"{project_name} Control Panel",
             description=(
-                f"This control panel is for the project: **{self.panel_title.value}**\n"
+                f"This control panel is for the project: **{project_name}**\n"
                 "Redeem your key to access the script, stats and more."
             ),
             color=COLOR_PRINCIPAL
         )
         embed.set_footer(
-            text=generar_footer_panel(),
+            text=generar_footer_panel(fecha_creacion),
             icon_url=FOOTER_ICON
         )
 
@@ -220,7 +185,7 @@ class PanelModal(discord.ui.Modal, title="Create Control Panel"):
 # =======================
 # COMANDO /panel
 # =======================
-@bot.tree.command(name="panel", description="Create control panel")
+@bot.tree.command(name="panel", description="Create a control panel")
 async def panel(interaction: discord.Interaction):
     if interaction.user.id != OWNER_ID:
         await interaction.response.send_message(
